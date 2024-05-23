@@ -1,0 +1,221 @@
+django_todo_app/
+│
+├── manage.py
+├── todo/
+│   ├── __init__.py
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── tests.py
+│   ├── urls.py
+│   ├── views.py
+│   ├── templates/
+│   │   ├── base.html
+│   │   └── index.html
+│   └── static/
+│       └── style.css
+└── django_todo_app/
+    ├── __init__.py
+    ├── asgi.py
+    ├── settings.py
+    ├── urls.py
+    └── wsgi.py
+# Create the project
+django-admin startproject django_todo_app
+
+# Navigate to the project directory
+cd django_todo_app
+
+# Create the todo app
+python manage.py startapp todo
+
+# Add 'todo' to the INSTALLED_APPS list in django_todo_app/settings.py
+INSTALLED_APPS = [
+    ...
+    'todo',
+    ...
+]
+
+# Configure static files
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / "static"]
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('todo.urls')),
+]
+from django.db import models
+
+class Todo(models.Model):
+    title = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.title
+from django.shortcuts import render, redirect
+from .models import Todo
+
+def index(request):
+    todos = Todo.objects.all()
+    return render(request, 'index.html', {'todos': todos})
+
+def add_todo(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        if title:
+            Todo.objects.create(title=title)
+    return redirect('index')
+
+def delete_todo(request, todo_id):
+    Todo.objects.filter(id=todo_id).delete()
+    return redirect('index')
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('add/', views.add_todo, name='add_todo'),
+    path('delete/<int:todo_id>/', views.delete_todo, name='delete_todo'),
+]
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Django To-Do App</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>To-Do List</h1>
+    <form action="{% url 'add_todo' %}" method="post">
+        {% csrf_token %}
+        <input type="text" name="title" placeholder="Enter a new to-do item">
+        <button type="submit">Add</button>
+    </form>
+    <ul>
+        {% for todo in todos %}
+            <li>{{ todo.title }} <a href="{% url 'delete_todo' todo.id %}">Delete</a></li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+.container {
+    width: 50%;
+    margin: 0 auto;
+    padding: 20px;
+    background: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-top: 50px;
+}
+
+h1 {
+    text-align: center;
+}
+
+form {
+    display: flex;
+    justify-content: space-between;
+}
+
+input[type="text"] {
+    width: 80%;
+    padding: 10px;
+}
+
+button {
+    padding: 10px;
+    background: #007BFF;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    padding: 10px;
+    background: #f9f9f9;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+a {
+    color: red;
+    text-decoration: none;
+}
+# Django To-Do App
+
+A simple to-do list application built with Django.
+
+## Setup
+
+1. Clone the repository:
+    ```
+    git clone https://github.com/yourusername/django_todo_app.git
+    ```
+
+2. Navigate to the project directory:
+    ```
+    cd django_todo_app
+    ```
+
+3. Create a virtual environment:
+    ```
+    python -m venv venv
+    ```
+
+4. Activate the virtual environment:
+    - On Windows:
+      ```
+      venv\Scripts\activate
+      ```
+    - On macOS/Linux:
+      ```
+      source venv/bin/activate
+      ```
+
+5. Install the dependencies:
+    ```
+    pip install django
+    ```
+
+6. Apply migrations:
+    ```
+    python manage.py migrate
+    ```
+
+7. Run the development server:
+    ```
+    python manage.py runserver
+    ```
+
+8. Open your browser and go to `http://127.0.0.1:8000/` to see the app.
+
+## Features
+
+- Add new to-do items
+- Delete existing to-do items
